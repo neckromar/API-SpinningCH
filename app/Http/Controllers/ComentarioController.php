@@ -32,26 +32,30 @@ class ComentarioController extends Controller
             //guardar el coche
             $comentario = new Comentario();
             $comentario->user_id = $user->sub;
+         
             $comentario->comentario = $params->comentario;
-
+            $comentario->status = "ACTIVAR";
             if($params->imagen_id != NULL){
 
                 $comentario->imagen_id = $params->imagen_id;
-                $comentario->video_id =NULL;
-                $comentario->post_id =NULL;
+                $comentario->video_id = NULL;
+                $comentario->post_id = NULL;
             
             }
             else if($params->video_id != NULL){
+                $comentario->imagen_id = NULL;
                 $comentario->video_id = $params->video_id;
+                
+                $comentario->post_id = NULL;
+            }
+            else if($params->post_id != NULL){
+                
                 $comentario->imagen_id = NULL;
-                $comentario->post_id =NULL;
-            }else{
+                $comentario->video_id = NULL;
                 $comentario->post_id = $params->post_id;
-                $comentario->imagen_id = NULL;
-                $comentario->video_id =NULL;
             }
           
-            $comentario->status = "ACTIVAR";
+           
             $comentario->save();
 
 

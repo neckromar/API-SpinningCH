@@ -25,7 +25,7 @@ Route::resource('/user','UserController');
 Route::post('/user/image-upload','UserController@upload');
 Route::get('/user/image-collect/{filename}','UserController@getImage');
 
-Route::resource('/videos','VideoController');
+
 
 
 Route::resource('/imagenes','ImagenController');

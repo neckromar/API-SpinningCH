@@ -22,7 +22,28 @@ class VideoController extends Controller
                     'status' => 'success'
                         ), 200);
     }
+    public function show($id) {
+        $videos = Video::find($id)->load('user')->load('comments');
+        if(is_object($videos)){
+            $videos = Video::find($id)->load('user')->load('comments');
+            $comentarios = Comentario::where('video_id',$id)->get()->load('usercomentario');
 
+            return response()->json(array(
+                'videos' => $videos,
+                'comentarios' => $comentarios,
+                'status' => 'success'
+                    ), 200);
+        }
+        else{
+            return response()->json(array(
+                'message' => 'El video no existe',
+                'status' => 'error'
+                    ), 400);
+        }
+       
+
+      
+    }
     public function store(Request $request) {
         $hash = $request->header('Authorization', null);
 
