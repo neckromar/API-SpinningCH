@@ -41,3 +41,6 @@ Route::post('/videos/miniatura-upload','VideoController@uploadminiatura');
 
 Route::get('/videos/video-collect/{filename}','VideoController@getVideo');
 Route::get('/videos/miniatura-collect/{filename}','VideoController@getMiniatura');
+
+
+Route::resource('/posts','PostController');
