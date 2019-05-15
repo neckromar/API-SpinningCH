@@ -14,6 +14,14 @@ use App\Helpers\JwtAuth;
 
 class PostController extends Controller
 {
+     public function index(Request $request) {
+                $posts = Post::all()->load('user')->load('comments');
+            
+                return response()->json(array(
+                            'posts' =>  $posts,
+                            'status' => 'success'
+                                ), 200);
+            }
         public function store(Request $request) {
             $hash = $request->header('Authorization', null);
     
@@ -32,7 +40,7 @@ class PostController extends Controller
                 //guardar el coche
                 $post = new Post();
                 $post->user_id = $user->sub;
-             
+                $post->title = $params->title;
                 $post->description = $params->description;
                 $post->status = "ACTIVAR";
                 
@@ -59,6 +67,61 @@ class PostController extends Controller
         }
     
     
-        
+        public function destroy($id, Request $request){
+            $hash = $request->header('Authorization', null);
+            
+            $jwtAuth= new JwtAuth();
+            $checkToken=$jwtAuth->checkToken($hash);
+            
+            if($checkToken){
+                //comprobar si existe el registro
+                $post=Post::find($id);
+                
+                //borrar los comentarios primero
+                $comentarios=Comentario::where('post_id',$id)->get()->each->delete();
+            
+                $post->delete();
+                
+                //devolver el registro borrado
+                 $data = array(
+                    'post' => $post,
+                    'message' => 'Comentario borrado correctamente',
+                    'status' => 'error',
+                    'code' => 200
+                );
+                 
+            }else{
+                  $data = array(
+                    'message' => 'Login incorecto',
+                    'status' => 'error',
+                    'code' => 400
+                );
+            }     
+            
+            return response()->json($data, 200);
+        }
+
+        public function show($id) {
+            $post = Post::find($id)->load('user')->load('comments');
+            if(is_object($post)){
+                $post = Post::find($id)->load('user')->load('comments');
+                $comentarios = Comentario::where('post_id',$id)->get()->load('usercomentario');
+    
+                return response()->json(array(
+                    'post' => $post,
+                    'comentarios' => $comentarios,
+                    'status' => 'success'
+                        ), 200);
+            }
+            else{
+                return response()->json(array(
+                    'message' => 'El post no existe',
+                    'status' => 'error'
+                        ), 400);
+            }
+           
+    
+          
+        }
     
 }

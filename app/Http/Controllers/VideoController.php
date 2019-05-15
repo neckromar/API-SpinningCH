@@ -214,4 +214,42 @@ class VideoController extends Controller
         return response()->json($data,$data['code']);
       
     }
+
+    public function destroy($id, Request $request){
+        $hash = $request->header('Authorization', null);
+        
+        $jwtAuth= new JwtAuth();
+        $checkToken=$jwtAuth->checkToken($hash);
+        
+        if($checkToken){
+            //comprobar si existe el registro
+            $video=Video::find($id);
+            
+            //borrar los comentarios primero
+            $comentarios=Comentario::where('video_id',$id)->get()->each->delete();
+        
+        
+            //borrarlo
+            \Storage::disk('videos')->delete($video->video_path);
+            \Storage::disk('miniaturas')->delete($video->miniatura);
+            $video->delete();
+            
+            //devolver el registro borrado
+             $data = array(
+                'video' => $video,
+                'message' => 'video borrado correctamente',
+                'status' => 'error',
+                'code' => 200
+            );
+             
+        }else{
+              $data = array(
+                'message' => 'Login incorecto',
+                'status' => 'error',
+                'code' => 400
+            );
+        }     
+        
+        return response()->json($data, 200);
+    }
 }
