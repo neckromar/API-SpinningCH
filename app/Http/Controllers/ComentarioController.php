@@ -42,13 +42,13 @@ class ComentarioController extends Controller
                 $comentario->post_id = NULL;
             
             }
-            else if($params->video_id != NULL){
+         if($params->video_id != NULL){
                 $comentario->imagen_id = NULL;
                 $comentario->video_id = $params->video_id;
                 
                 $comentario->post_id = NULL;
             }
-            else if($params->post_id != NULL){
+        if($params->post_id != NULL){
                 
                 $comentario->imagen_id = NULL;
                 $comentario->video_id = NULL;
