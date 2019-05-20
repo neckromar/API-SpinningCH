@@ -44,3 +44,6 @@ Route::get('/videos/miniatura-collect/{filename}','VideoController@getMiniatura'
 
 
 Route::resource('/posts','PostController');
+
+
+Route::resource('/logs','LogController');

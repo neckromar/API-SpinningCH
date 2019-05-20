@@ -8,6 +8,7 @@ use App\User;
 use App\Video;
 use App\Imagen;
 use App\Post;
+use App\Log;
 use App\Comentario;
 use Illuminate\Support\Facades\DB;
 use App\Helpers\JwtAuth;
@@ -82,7 +83,26 @@ class ImagenController extends Controller
                         'code' => 400
                     );
             }else{
+                $array_contenido=[
+                    'log' => 'NUEVA IMAGEN '.$imagen->id,
+                    'prioridad' => 1,
+                    'foto'=>$imagen->imagen_path,
+                    'usuario' => $imagen->user_id
+                ];
+
+
                 $imagen->save();
+
+                $log= new Log();
+                $log->prioridad=1;
+                $log->nombre='NUEVA IMAGEN '.$imagen->id;
+                $log->save();
+    
+                //para descargar el archivo json con formato de contenido-id del mensaje
+                $json_string = json_encode($array_contenido);
+                $file =  "C:/wamp64/www/ApiSpinningCH/logs/NUEVA IMAGEN ".$imagen->id .'.json';
+                file_put_contents($file, $json_string);
+
                 $data = array(
                     'imagen' => $imagen,
                     'status' => 'success',
@@ -165,13 +185,46 @@ class ImagenController extends Controller
         $checkToken=$jwtAuth->checkToken($hash);
         
         if($checkToken){
+
             //comprobar si existe el registro
             $imagen=Imagen::find($id);
-            
+            $vercomentarios=Comentario::where('imagen_id',$id)->get();
+              
+            $array_comentarios=[];
+         
+            foreach($vercomentarios as $ver){
+                $array_comentario=[
+                    'comentario' =>$ver->comentario ,
+                    'id'=> $ver->id,
+                    'usuario'=> $ver->user_id
+                ];
+                array_push($array_comentarios, $array_comentario);
+            }
+          
+            $array_contenido=[
+                'log' => 'IMAGEN ELIMINADA '.$imagen->id,
+                'prioridad' => 3,
+                'comentarios' => $array_comentarios,
+                'foto'=>$imagen->imagen_path,
+                'usuario' => $imagen->user_id
+            ];
+
             //borrar los comentarios primero
             $comentarios=Comentario::where('imagen_id',$id)->get()->each->delete();
         
+            
+            $log= new Log();
+            $log->prioridad=3;
+            $log->nombre='IMAGEN ELIMINADA '.$imagen->id;
+            $log->save();
+
         
+           
+            //para descargar el archivo json con formato de contenido-id del mensaje
+            $json_string = json_encode($array_contenido);
+            $file =  "C:/wamp64/www/ApiSpinningCH/logs/IMAGEN ELIMINADA ".$imagen->id .'.json';
+            file_put_contents($file, $json_string);
+
             //borrarlo
             \Storage::disk('imagenes')->delete($imagen->imagen_path);
             $imagen->delete();

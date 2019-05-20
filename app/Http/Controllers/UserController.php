@@ -8,6 +8,7 @@ use App\User;
 use App\Video;
 use App\Imagen;
 use App\Post;
+use App\Log;
 use App\Comentario;
 use Illuminate\Support\Facades\DB;
 use App\Helpers\JwtAuth;
@@ -66,7 +67,26 @@ class UserController extends Controller {
             unset($params_array['created_at']);
             unset($params_array['image_path']);
           
+
             $user=User::where('id',$id)->update($params_array);
+           
+
+            $array_contenido=[
+                'log' => 'USUARIO EDITADO '.$id,
+                'parametros'=> $params_array,
+                'prioridad' => 2,
+                'usuario' => $id
+            ];
+
+            $log= new Log();
+            $log->prioridad=2;
+            $log->nombre='USUARIO EDITADO '.$id;
+            $log->save();
+
+            //para descargar el archivo json con formato de contenido-id del mensaje
+            $json_string = json_encode($array_contenido);
+            $file =  "C:/wamp64/www/ApiSpinningCH/logs/USUARIO EDITADO ".$id .'.json';
+            file_put_contents($file, $json_string);
             
             $data = array(
                 'user' => $params,
@@ -117,7 +137,30 @@ class UserController extends Controller {
             $isset_user = User::where('email', $email)->first();
 
             if ($isset_user == null) {
+
+                //PARA HACER EL LOG DEL REGISTRO
+                $tiempo=time();
+                $array_contenido=[
+                        'log' => 'NUEVO USUARIO IDENT '.$tiempo,
+                        'rol' =>$user->role,
+                        'nombre'=> $name .' '.$surname,
+                        'email' => $email,
+                        'prioridad' => 1
+                    ];
+
+                $log= new Log();
+                $log->prioridad=1;
+                $log->nombre='NUEVO USUARIO IDENT '.$tiempo;
+                $log->save();
+
+                //para descargar el archivo json con formato de contenido-id del mensaje
+                $json_string = json_encode($array_contenido);
+                $file =  "C:/wamp64/www/ApiSpinningCH/logs/NUEVO USUARIO IDENT ".$tiempo .'.json';
+                file_put_contents($file, $json_string);
+                //hasta aqui
+
                 $user->save();
+                
                 $data = array(
                     'status' => 'success',
                     'code' => 200,

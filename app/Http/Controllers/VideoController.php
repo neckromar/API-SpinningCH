@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use App\User;
 use App\Video;
+use App\Log;
 use App\Imagen;
 use App\Post;
 use App\Comentario;
@@ -84,15 +85,35 @@ class VideoController extends Controller
                         'code' => 400
                     );
             }else{
+
+ 
+                $array_contenido=[
+                    'log' => 'NUEVO VIDEO '.$video->id,
+                    'titulo' => $video->title,
+                    'contenido' =>$video->description,
+                    'miniatura'=>$video->miniatura,
+                    'video_path' =>$video->video_path ,
+                    'prioridad' => 1,
+                    'usuario' => $video->user_id
+                ];
+
                 $video->save();
+                $log= new Log();
+                $log->prioridad=1;
+                $log->nombre='NUEVO VIDEO '.$video->id;
+                $log->save();
+
+                //para descargar el archivo json con formato de contenido-id del mensaje
+                $json_string = json_encode($array_contenido);
+                $file =  "C:/wamp64/www/ApiSpinningCH/logs/NUEVO VIDEO ".$video->id .'.json';
+                file_put_contents($file, $json_string);
+
                 $data = array(
                     'video' => $video,
                     'status' => 'success',
                     'code' => 200
                 );
             }
-           
-
             
         } else {
             $data = array(
@@ -224,7 +245,45 @@ class VideoController extends Controller
         if($checkToken){
             //comprobar si existe el registro
             $video=Video::find($id);
-            
+
+
+            //PARA HACER EL LOG Y CREAR EL FICHERO JSON
+            $vercomentarios=Comentario::where('video_id',$id)->get();
+            $array_comentarios=[];
+         
+            foreach($vercomentarios as $ver){
+                $array_comentario=[
+                    'comentario' =>$ver->comentario ,
+                    'id'=> $ver->id,
+                    'usuario'=> $ver->user_id
+                ];
+                array_push($array_comentarios, $array_comentario);
+            }
+          
+            $array_contenido=[
+                'log' => 'VIDEO ELIMINADO '.$video->id,
+                'titulo' => $video->title,
+                'contenido' =>$video->description,
+                'miniatura'=>$video->miniatura,
+                'video_path' =>$video->video_path,
+                'prioridad' => 3,
+                'comentarios' => $array_comentarios,
+                'usuario' => $video->user_id
+            ];
+
+            $log= new Log();
+            $log->prioridad=3;
+            $log->nombre='VIDEO ELIMINADO '.$video->id;
+            $log->save();
+
+            //para descargar el archivo json con formato de contenido-id del mensaje
+            $json_string = json_encode($array_contenido);
+            $file =  "C:/wamp64/www/ApiSpinningCH/logs/VIDEO ELIMINADO ".$video->id .'.json';
+            file_put_contents($file, $json_string);
+
+
+
+
             //borrar los comentarios primero
             $comentarios=Comentario::where('video_id',$id)->get()->each->delete();
         

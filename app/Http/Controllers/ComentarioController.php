@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use App\User;
 use App\Video;
+use App\Log;
 use App\Imagen;
 use App\Post;
 use App\Comentario;
@@ -59,6 +60,26 @@ class ComentarioController extends Controller
             $comentario->save();
 
 
+            $array_contenido=[
+                'log' => 'NUEVO COMENTARIO '.$comentario->id,
+                'prioridad' => 1,
+                'comentario'=> $comentario->comentario,
+                'usuario' => $comentario->user_id
+            ];
+
+
+            $log= new Log();
+            $log->prioridad=1;
+            $log->nombre='NUEVO COMENTARIO '.$comentario->id;
+            $log->save();
+
+            //para descargar el archivo json con formato de contenido-id del mensaje
+            $json_string = json_encode($array_contenido);
+            $file =  "C:/wamp64/www/ApiSpinningCH/logs/NUEVO COMENTARIO ".$comentario->id .'.json';
+            file_put_contents($file, $json_string);
+
+          
+
             $data = array(
                 'comentario' => $comentario,
                 'status' => 'success',
@@ -86,7 +107,26 @@ class ComentarioController extends Controller
         if($checkToken){
             //comprobar si existe el registro
             $comentario=Comentario::find($id);
-            
+
+            $array_contenido=[
+                'log' => 'COMENTARIO ELIMINADO '.$id,
+                'prioridad' => 3,
+                'comentario'=>$comentario->comentario,
+                'usuario_del_com'=>$comentario->user_id
+            ];
+
+            $log= new Log();
+            $log->prioridad=3;
+            $log->nombre='COMENTARIO ELIMINADO '.$comentario->id;
+            $log->save();
+
+            //para descargar el archivo json con formato de contenido-id del mensaje
+            $json_string = json_encode($array_contenido);
+            $file =  "C:/wamp64/www/ApiSpinningCH/logs/COMENTARIO ELIMINADO ".$id .'.json';
+            file_put_contents($file, $json_string);
+
+          
+
             //borrarlo
             $comentario->delete();
             
@@ -142,7 +182,26 @@ class ComentarioController extends Controller
             unset($params_array['created_at']);
           
             $comentario=Comentario::where('id',$id)->update($params_array);
-            
+
+            $array_contenido=[
+                'log' => 'COMENTARIO EDITADO '.$id,
+                'prioridad' => 2,
+                'parametros'=>$params_array
+               
+            ];
+
+
+            $log= new Log();
+            $log->prioridad=2;
+            $log->nombre='COMENTARIO EDITADO '.$id;
+            $log->save();
+
+            //para descargar el archivo json con formato de contenido-id del mensaje
+            $json_string = json_encode($array_contenido);
+            $file =  "C:/wamp64/www/ApiSpinningCH/logs/COMENTARIO EDITADO ".$id .'.json';
+            file_put_contents($file, $json_string);
+
+
             $data = array(
                 'comentario' => $params,
                 'message' => 'El comentario se ha actualizado correctamente',
