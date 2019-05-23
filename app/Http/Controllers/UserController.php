@@ -8,6 +8,7 @@ use App\User;
 use App\Video;
 use App\Imagen;
 use App\Post;
+use App\Role;
 use App\Log;
 use App\Comentario;
 use Illuminate\Support\Facades\DB;
@@ -62,7 +63,6 @@ class UserController extends Controller {
        
             //actualizar el coche
             unset($params_array['id']);
-            unset($params_array['role']);
             unset($params_array['password']);
             unset($params_array['created_at']);
             unset($params_array['image_path']);
@@ -86,7 +86,7 @@ class UserController extends Controller {
             //para descargar el archivo json con formato de contenido-id del mensaje
             $json_string = json_encode($array_contenido);
             $file =  "C:/wamp64/www/ApiSpinningCH/logs/USUARIO EDITADO ".$id .'.json';
-            file_put_contents($file, $json_string);
+            //file_put_contents($file, $json_string);
             
             $data = array(
                 'user' => $params,
@@ -117,7 +117,7 @@ class UserController extends Controller {
         $name = (!is_null($json) && isset($params->name)) ? $params->name : null;
         $surname = (!is_null($json) && isset($params->surname)) ? $params->surname : null;
         $image_path = "perfil.jpg";
-        $role = "ROLE_ACTIVAR";
+        $role = 3;
         $password = (!is_null($json) && isset($params->password)) ? $params->password : null;
 
         if (!is_null($email) && !is_null($name) && !is_null($password)) {
@@ -127,7 +127,7 @@ class UserController extends Controller {
             $user->name = $name;
             $user->image_path = $image_path;
             $user->surname = $surname;
-            $user->role = $role;
+            $user->role_id = $role;
 
             //cifrar la clave
             $pwd = hash('sha256', $password);
@@ -142,7 +142,7 @@ class UserController extends Controller {
                 $tiempo=time();
                 $array_contenido=[
                         'log' => 'NUEVO USUARIO IDENT '.$tiempo,
-                        'rol' =>$user->role,
+                        'rol' =>$user->role_id,
                         'nombre'=> $name .' '.$surname,
                         'email' => $email,
                         'prioridad' => 1
@@ -273,4 +273,93 @@ class UserController extends Controller {
         return response()->json($data,$data['code']);
       
     }
+
+    
+    public function destroy($id, Request $request){
+        $hash = $request->header('Authorization', null);
+        
+        $jwtAuth= new JwtAuth();
+        $checkToken=$jwtAuth->checkToken($hash);
+        
+        if($checkToken){
+            //comprobar si existe el registro
+            $user=User::find($id);
+
+            //borrar comentarios de este usuario
+           $comentarios=Comentario::where('user_id',$id)->get()->each->delete();
+        
+
+            //borrar fotos
+            $imagenes=Imagen::where('user_id',$id)->get();
+            foreach($imagenes as $imagen){
+                //borrarlo
+                \Storage::disk('imagenes')->delete($imagen->imagen_path);
+                $imagen->delete();
+
+            }
+               
+            //borrar videos
+            $videos=Video::where('user_id',$id)->get();
+            foreach($videos as $video){
+                //borrarlo
+                \Storage::disk('videos')->delete($video->video_path);
+                \Storage::disk('miniaturas')->delete($video->miniatura);
+                $video->delete();
+
+            }
+
+            //borrar post
+            $posts=Post::where('user_id',$id)->get()->each->delete();
+
+
+
+            $array_contenido=[
+                'log' => 'USUARIO ELIMINADO '.$id,
+                'prioridad' => 3,
+                'nombre'=>$user->name,
+                'correo' => $user->email,
+                'comentarios_borrados' => $comentarios,
+                'imagenes_borradas' =>$imagenes,
+                'videos' =>  $videos,
+                'posts' =>$posts,
+                'usuario_del_com'=>$user->id
+            ];
+
+            $log= new Log();
+            $log->prioridad=3;
+            $log->nombre='USUARIO ELIMINADO '.$user->id;
+            $log->save();
+
+            //para descargar el archivo json con formato de contenido-id del mensaje
+            $json_string = json_encode($array_contenido);
+            $file =  "C:/wamp64/www/ApiSpinningCH/logs/USUARIO ELIMINADO ".$id .'.json';
+            file_put_contents($file, $json_string);
+
+            DB::table('deleted_users')->insert([
+                ['id' => $user->id, 'email' =>  $user->email,'role_id' =>  $user->role_id,'name' =>  $user->name,'surname' =>  $user->surname]
+              
+            ]);
+
+
+            //borrarlo
+            $user->delete();
+            
+            //devolver el registro borrado
+             $user = array(
+                'message' => 'Usuario borrado correctamente',
+                'status' => 'error',
+                'code' => 200
+            );
+             
+        }else{
+              $data = array(
+                'message' => 'Login incorecto',
+                'status' => 'error',
+                'code' => 400
+            );
+        }     
+        
+        return response()->json($data, 200);
+    }
+
 }

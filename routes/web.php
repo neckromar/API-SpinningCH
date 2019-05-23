@@ -47,3 +47,11 @@ Route::resource('/posts','PostController');
 
 
 Route::resource('/logs','LogController');
+
+Route::post('/admin/login','AdminController@login');
+Route::get('/admin/dashboard/logs','AdminController@getLogs');
+Route::get('/admin/dashboard/users_inactived','AdminController@getUsersInactived');
+Route::get('/admin/dashboard/users_actived','AdminController@getUsersActived');
+Route::get('/admin/dashboard/user/{id}','AdminController@showUser');
+Route::put('/admin/dashboard/user/update/{id}','AdminController@update');
+Route::get('/admin/dashboard/users_deleted','AdminController@getUsersDeleted');

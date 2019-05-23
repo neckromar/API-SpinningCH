@@ -35,6 +35,7 @@ class JwtAuth {
                 'name' => $user->name,
                 'image_path' => $user->image_path,
                 'surname' => $user->surname,
+                'role_id' => $user->role_id,
                 'iat' => time(),
                 'exp' => time() + (7 * 24 * 60 * 60)
             );
@@ -78,6 +79,47 @@ class JwtAuth {
 
 
         return $auth;
+    }
+
+    public function signupAdmin($email, $password, $getToken = null) {
+
+        $user = User::where(
+                        array(
+                            'email' => $email,
+                            'password' => $password,
+                            'role_id' => 1
+                ))->first();
+
+        $signup = false;
+        if (is_object($user)) {
+            $signup = true;
+        }
+
+        if ($signup) {
+            //generar token
+            $token = array(
+                'sub' => $user->id,
+                'email' => $user->email,
+                'name' => $user->name,
+                'image_path' => $user->image_path,
+                'surname' => $user->surname,
+                'role_id' => $user->role_id,
+                'iat' => time(),
+                'exp' => time() + (7 * 24 * 60 * 60)
+            );
+
+            $jwt = JWT::encode($token, $this->key, 'HS256');
+
+            $decode = JWT::decode($jwt, $this->key, array('HS256'));
+
+            if ($getToken == null) {
+                return $jwt;
+            } else {
+                return $decode;
+            }
+        } else {
+            return array("status" => "error", "message" => "Login ha fallado!");
+        }
     }
 
 }
