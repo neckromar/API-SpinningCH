@@ -16,7 +16,7 @@ use App\Helpers\JwtAuth;
 class VideoController extends Controller
 {
     public function index(Request $request) {
-        $videos = Video::all()->load('user')->load('comments');
+        $videos = Video::where('status','ACEPTADO')->get()->load('user')->load('comments');
        
         return response()->json(array(
                     'videos' =>  $videos,
@@ -27,7 +27,7 @@ class VideoController extends Controller
         $videos = Video::find($id)->load('user')->load('comments');
         if(is_object($videos)){
             $videos = Video::find($id)->load('user')->load('comments');
-            $comentarios = Comentario::where('video_id',$id)->get()->load('usercomentario');
+            $comentarios = Comentario::where('video_id',$id)->where('status','ACTIVADO')->get()->load('usercomentario');
 
             return response()->json(array(
                 'videos' => $videos,
@@ -106,7 +106,7 @@ class VideoController extends Controller
                 //para descargar el archivo json con formato de contenido-id del mensaje
                 $json_string = json_encode($array_contenido);
                 $file =  "C:/wamp64/www/ApiSpinningCH/logs/NUEVO VIDEO ".$video->id .'.json';
-                file_put_contents($file, $json_string);
+              //  file_put_contents($file, $json_string);
 
                 $data = array(
                     'video' => $video,
@@ -124,6 +124,78 @@ class VideoController extends Controller
         }
         return response()->json($data, 200);
     }
+
+//hay que mejorar la validacion
+public function update($id, Request $request) {
+    $hash = $request->header('Authorization', null);
+
+    $jwtAuth = new JwtAuth();
+    $checktoken = $jwtAuth->checkToken($hash);
+
+    if ($checktoken) {
+        //recoger los parametros que llegan por post
+        $json= $request->input('json',null);
+        $params = json_decode($json);
+        $params_array=json_decode($json,true);
+     
+        
+        //validar los datos
+        $validate = \Validator::make($params_array, [
+                    'title' => 'required',
+                    'description' => 'required'
+        ]);
+        if ($validate->fails()) {
+            return response()->json($validate->errors(), 400);
+        }
+   
+        //actualizar el coche
+        unset($params_array['id']);
+        unset($params_array['user_id']);
+        unset($params_array['created_at']);
+        unset($params_array['miniatura']);
+        unset($params_array['video_path']);
+        unset($params_array['comments']);
+        unset($params_array['user']);
+      
+
+        $video=Video::where('id',$id)->update($params_array);
+       
+
+        $array_contenido=[
+            'log' => 'VIDEO EDITADO '.$id,
+            'parametros'=> $params_array,
+            'prioridad' => 2,
+            'usuario' => $id
+        ];
+
+        $log= new Log();
+        $log->prioridad=2;
+        $log->nombre='VIDEO EDITADO '.$id;
+        $log->save();
+
+        //para descargar el archivo json con formato de contenido-id del mensaje
+        $json_string = json_encode($array_contenido);
+        $file =  __DIR__."../logs/VIDEO EDITADO ".$id .'.json';
+        //file_put_contents($file, $json_string);
+        
+        $data = array(
+            'video' => $params,
+            'message' => 'El usuario se ha actualizado correctamente',
+            'status' => 'success',
+            'code' => 200
+        );
+        
+        
+    } else {
+        $data = array(
+            'message' => 'Login incorecto al update',
+            'status' => 'error',
+            'code' => 300
+        );
+    }
+    return response()->json($data, 200);
+}
+
 
     public function upload(Request $request){
 
@@ -279,7 +351,7 @@ class VideoController extends Controller
             //para descargar el archivo json con formato de contenido-id del mensaje
             $json_string = json_encode($array_contenido);
             $file =  "C:/wamp64/www/ApiSpinningCH/logs/VIDEO ELIMINADO ".$video->id .'.json';
-            file_put_contents($file, $json_string);
+           // file_put_contents($file, $json_string);
 
 
 

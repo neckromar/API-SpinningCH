@@ -76,7 +76,7 @@ class ComentarioController extends Controller
             //para descargar el archivo json con formato de contenido-id del mensaje
             $json_string = json_encode($array_contenido);
             $file =  "C:/wamp64/www/ApiSpinningCH/logs/NUEVO COMENTARIO ".$comentario->id .'.json';
-            file_put_contents($file, $json_string);
+           // file_put_contents($file, $json_string);
 
           
 
@@ -123,7 +123,7 @@ class ComentarioController extends Controller
             //para descargar el archivo json con formato de contenido-id del mensaje
             $json_string = json_encode($array_contenido);
             $file =  "C:/wamp64/www/ApiSpinningCH/logs/COMENTARIO ELIMINADO ".$id .'.json';
-            file_put_contents($file, $json_string);
+          //  file_put_contents($file, $json_string);
 
           
 
@@ -175,7 +175,6 @@ class ComentarioController extends Controller
             //actualizar el coche
             unset($params_array['id']);
             unset($params_array['usercomentario']);
-            unset($params_array['status']);
             unset($params_array['imagen_comentario']);
             unset($params_array['video_id']);
             unset($params_array['post_id']);
@@ -199,7 +198,7 @@ class ComentarioController extends Controller
             //para descargar el archivo json con formato de contenido-id del mensaje
             $json_string = json_encode($array_contenido);
             $file =  "C:/wamp64/www/ApiSpinningCH/logs/COMENTARIO EDITADO ".$id .'.json';
-            file_put_contents($file, $json_string);
+          //  file_put_contents($file, $json_string);
 
 
             $data = array(

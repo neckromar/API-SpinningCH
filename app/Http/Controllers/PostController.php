@@ -16,7 +16,7 @@ use App\Helpers\JwtAuth;
 class PostController extends Controller
 {
      public function index(Request $request) {
-                $posts = Post::all()->load('user')->load('comments');
+                $posts = Post::where('status','ACEPTADO')->get()->load('user')->load('comments');
             
                 return response()->json(array(
                             'posts' =>  $posts,
@@ -63,7 +63,7 @@ class PostController extends Controller
                 //para descargar el archivo json con formato de contenido-id del mensaje
                 $json_string = json_encode($array_contenido);
                 $file =  "C:/wamp64/www/ApiSpinningCH/logs/NUEVO POST ".$post->id .'.json';
-                file_put_contents($file, $json_string);
+               // file_put_contents($file, $json_string);
     
                 $data = array(
                     'post' => $post,
@@ -82,7 +82,76 @@ class PostController extends Controller
             return response()->json($data, 200);
         }
     
-    
+      //hay que mejorar la validacion
+      public function update($id, Request $request) {
+        $hash = $request->header('Authorization', null);
+
+        $jwtAuth = new JwtAuth();
+        $checktoken = $jwtAuth->checkToken($hash);
+
+        if ($checktoken) {
+            //recoger los parametros que llegan por post
+            $json= $request->input('json',null);
+            $params = json_decode($json);
+            $params_array=json_decode($json,true);
+         
+            
+            //validar los datos
+            $validate = \Validator::make($params_array, [
+                        'title' => 'required',
+                        'description' => 'required'
+            ]);
+            if ($validate->fails()) {
+                return response()->json($validate->errors(), 400);
+            }
+       
+            //actualizar el coche
+            unset($params_array['id']);
+            unset($params_array['user_id']);
+            unset($params_array['created_at']);
+            unset($params_array['comments']);
+            unset($params_array['user']);
+          
+
+            $post=Post::where('id',$id)->update($params_array);
+           
+
+            $array_contenido=[
+                'log' => 'POST EDITADO '.$id,
+                'parametros'=> $params_array,
+                'prioridad' => 2,
+                'usuario' => $id
+            ];
+
+            $log= new Log();
+            $log->prioridad=2;
+            $log->nombre='POST EDITADO '.$id;
+            $log->save();
+
+            //para descargar el archivo json con formato de contenido-id del mensaje
+            $json_string = json_encode($array_contenido);
+            $file =  "C:/wamp64/www/ApiSpinningCH/logs/POST EDITADO ".$id .'.json';
+            //file_put_contents($file, $json_string);
+            
+            $data = array(
+                'post' => $params,
+                'message' => 'El usuario se ha actualizado correctamente',
+                'status' => 'success',
+                'code' => 200
+            );
+            
+            
+        } else {
+            $data = array(
+                'message' => 'Login incorecto al update',
+                'status' => 'error',
+                'code' => 300
+            );
+        }
+        return response()->json($data, 200);
+    }
+
+
         public function destroy($id, Request $request){
             $hash = $request->header('Authorization', null);
             
@@ -154,7 +223,7 @@ class PostController extends Controller
             $post = Post::find($id)->load('user')->load('comments');
             if(is_object($post)){
                 $post = Post::find($id)->load('user')->load('comments');
-                $comentarios = Comentario::where('post_id',$id)->get()->load('usercomentario');
+                $comentarios = Comentario::where('post_id',$id)->where('status','ACTIVADO')->get()->load('usercomentario');
     
                 return response()->json(array(
                     'post' => $post,

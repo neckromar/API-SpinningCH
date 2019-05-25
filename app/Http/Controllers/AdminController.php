@@ -217,5 +217,28 @@ class AdminController extends Controller {
         }
         return response()->json($data, 200);
     }
+
+
+    public function getTodoInactivo(){
+       
+            $posts = Post::where('status','ACTIVAR')->get()->load('user');
+            $imagenes = Imagen::where('status','ACTIVAR')->get()->load('user');
+            $videos = Video::where('status','ACTIVAR')->get()->load('user');
+            $comentarios = Comentario::where('status','ACTIVAR')->get()->load('usercomentario');
+            $array_contenidos=[];
+            array_push($array_contenidos,$posts,$imagenes,$videos, $comentarios);
+
+
+            return response()->json(array(
+                'contenidos' => $array_contenidos,
+                'status' => 'success'
+                    ), 200);
+        
+       
+    }
+
+    
+    
+    
     
 }
