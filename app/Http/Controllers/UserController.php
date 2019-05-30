@@ -116,8 +116,9 @@ class UserController extends Controller {
 
         $name = (!is_null($json) && isset($params->name)) ? $params->name : null;
         $surname = (!is_null($json) && isset($params->surname)) ? $params->surname : null;
+        
         $image_path = "perfil.jpg";
-        $role = 3;
+        $role =(!is_null($json) && isset($params->role_id)) ? $params->role_id : 3;
         $password = (!is_null($json) && isset($params->password)) ? $params->password : null;
 
         if (!is_null($email) && !is_null($name) && !is_null($password)) {
@@ -156,7 +157,7 @@ class UserController extends Controller {
                 //para descargar el archivo json con formato de contenido-id del mensaje
                 $json_string = json_encode($array_contenido);
                 $file =  "C:/wamp64/www/ApiSpinningCH/logs/NUEVO USUARIO IDENT ".$tiempo .'.json';
-                file_put_contents($file, $json_string);
+             //   file_put_contents($file, $json_string);
                 //hasta aqui
 
                 $user->save();
@@ -333,7 +334,7 @@ class UserController extends Controller {
             //para descargar el archivo json con formato de contenido-id del mensaje
             $json_string = json_encode($array_contenido);
             $file =  "C:/wamp64/www/ApiSpinningCH/logs/USUARIO ELIMINADO ".$id .'.json';
-            file_put_contents($file, $json_string);
+           // file_put_contents($file, $json_string);
 
             DB::table('deleted_users')->insert([
                 ['id' => $user->id, 'email' =>  $user->email,'role_id' =>  $user->role_id,'name' =>  $user->name,'surname' =>  $user->surname]
